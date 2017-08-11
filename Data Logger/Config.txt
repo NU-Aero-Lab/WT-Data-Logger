@@ -1,0 +1,18 @@
+1
+200 	
+0.0008	
+2	
+0
+1
+
+/*********************************************/
+		 Code Functions
+/*********************************************/
+1. Number of Channels
+2. Samples per Channel 
+3. Sampling Interval (s)
+4. Sampling Mode
+ - 1. Finite Sampling - 2. Continous Sampling
+5. Range of Channels to Sample
+ (i.e. 0 or 0:1)
+6. Number of Iterations

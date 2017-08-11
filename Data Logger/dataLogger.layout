@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<FileVersion major="1" minor="0" />
+	<ActiveTarget name="Debug" />
+	<File name="main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="-4" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1573" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="43" />
+			<Collapse line="48" />
+			<Collapse line="53" />
+			<Collapse line="58" />
+			<Collapse line="63" />
+			<Collapse line="68" />
+		</Folding>
+	</File>
+	<File name="MultiDev.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="8215" topLine="165" />
+		</Cursor>
+	</File>
+	<File name="Interface.cpp" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="355" topLine="3" />
+		</Cursor>
+		<Folding>
+			<Collapse line="18" />
+			<Collapse line="24" />
+			<Collapse line="30" />
+			<Collapse line="48" />
+			<Collapse line="74" />
+			<Collapse line="80" />
+			<Collapse line="85" />
+			<Collapse line="90" />
+			<Collapse line="126" />
+			<Collapse line="328" />
+			<Collapse line="376" />
+			<Collapse line="431" />
+			<Collapse line="529" />
+			<Collapse line="577" />
+			<Collapse line="632" />
+			<Collapse line="642" />
+			<Collapse line="652" />
+			<Collapse line="662" />
+			<Collapse line="672" />
+			<Collapse line="687" />
+			<Collapse line="702" />
+			<Collapse line="717" />
+			<Collapse line="731" />
+			<Collapse line="776" />
+			<Collapse line="818" />
+			<Collapse line="846" />
+			<Collapse line="851" />
+			<Collapse line="856" />
+		</Folding>
+	</File>
+	<File name="Startup.cpp" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="-4" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="180748" topLine="199" />
+		</Cursor>
+		<Folding>
+			<Collapse line="19" />
+			<Collapse line="97" />
+			<Collapse line="297" />
+			<Collapse line="387" />
+			<Collapse line="516" />
+			<Collapse line="540" />
+			<Collapse line="551" />
+			<Collapse line="575" />
+			<Collapse line="1920" />
+			<Collapse line="2957" />
+			<Collapse line="3335" />
+			<Collapse line="3342" />
+			<Collapse line="3361" />
+		</Folding>
+	</File>
+	<File name="include\Startup.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="17" topLine="1" />
+		</Cursor>
+	</File>
+	<File name="include\readConfig.h" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="664" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="9" />
+		</Folding>
+	</File>
+	<File name="include\Interface.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2411" topLine="61" />
+		</Cursor>
+	</File>
+	<File name="include\serialClass.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="82" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Startup.cpp" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="-2" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\readConfig.cpp" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="-3" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="273" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="src\sampleRate.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="188" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\serialClass.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="24" topLine="0" />
+		</Cursor>
+	</File>
+</CodeBlocks_layout_file>

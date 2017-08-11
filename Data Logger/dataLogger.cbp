@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="dataLogger" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Option show_notes="0">
+			<notes>
+				<![CDATA[Arduino Development:
+- Improve the data collection process.
+
+Stepper Motor:
+- Adjust y and z limits including the message appearing. Even on the automatic motion.
+- Reset Button: required to return the motors to their "home" settings x=y=z=0
+- Feedback: include a feedback routine to indicate the number of revs the motors have moved using encoders. 
+- Have a better delay machnism than using cpu computations to delay between digital pulse generation.
+- Double check the need for different tasks for different traverse locations. 
+(DONE) 	- include an x1 and x2 drive mechanisms rather than coupled into x. 
+(DONE)	- Motion Control: include a forward or reverse criteria for the motors. 
+(DONE) 	- Operational Conditions: include a maximum and minimum steps before the motors snap out of 	position. This will take setx1, setx2, sety, setz values and ensure they are not past their operational limit. 
+]]>
+			</notes>
+		</Option>
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Test2" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="include" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Test2" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+		</Compiler>
+		<Unit filename="Interface.cpp" />
+		<Unit filename="MultiDev.cpp" />
+		<Unit filename="Startup.cpp" />
+		<Unit filename="include/Distance.h" />
+		<Unit filename="include/Interface.h" />
+		<Unit filename="include/Startup.h" />
+		<Unit filename="include/readConfig.h" />
+		<Unit filename="include/serialClass.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="readConfig.cpp" />
+		<Unit filename="src/Distance.cpp" />
+		<Unit filename="src/Startup.cpp" />
+		<Unit filename="src/readConfig.cpp" />
+		<Unit filename="src/sampleRate.cpp" />
+		<Unit filename="src/serialClass.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

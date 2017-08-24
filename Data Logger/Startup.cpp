@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <iomanip>
 #include <bitset>
+#include <math.h>
 
 using namespace std;
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
@@ -168,7 +169,7 @@ void Startup::distance()
 
     // open excel file
     MyExcelFile.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\test1.csv");
-    MyExcelFile << "Iteration, Distance, Voltage1, Voltage2, Time Stamp" << endl; // sets excel file headers
+    MyExcelFile << "Iteration, Distance (cm), Voltage1, Voltage2, Time Stamp" << endl; // sets excel file headers
 
     Serial* SP = new Serial("\\\\.\\COM3"); // create new serial port
     if (SP->IsConnected())
@@ -3296,170 +3297,115 @@ Error:
 
 void Startup::ESP()
 {
-    // sets the bitset to the number of addresses used
+    //DAQmx initialising variables
     int32       error=0;
     TaskHandle	taskHandle=0;
     TaskHandle	taskHandle2=0;
-    uInt32      data=0xffffffff;
+    float64     timeout = -1;
     int32		written;
 
     //record data
     ofstream MyExcelFile;
     MyExcelFile.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\ESPdata.csv");
-    MyExcelFile << "Iteration, chan01, Time Stamp" << endl; // sets excel file headers
+    ofstream timeCounter;
+    timeCounter.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\timeCounter.csv");
+    ofstream timeStamp;
+    timeStamp.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\timeStamp.csv");
+
+    SYSTEMTIME st1,st2;
 
     // constant variables
-    int address[6];
-    string setAddressNum;
-    string setAddressPort;
-    string finalAddress;
-    const char* cfinalAddress;
+    int numofAddresses = 64;
+    int numofIterations = 200;
+    double dataArray[250][63];
+    double udataArray[8];
+    int32        readArraySize;
+    int32        *data;
+    float64      dataread[64000];
+    LONGLONG looptime[100];
+    string strTime;
 
-    //read configuration file
-    readConfig commands;
-    commands.setAllConfig();
+    (DAQmxCreateTask("",&taskHandle)); // create task
+    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,"Dev1/port1/line0:5","",DAQmx_Val_ChanForAllLines));
+    DAQmxErrChk (DAQmxStartTask(taskHandle));
 
-    for (int i=0; i < commands.getIteration(); i = i+1)
+    DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
+    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1/ai0:9","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
+    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",12800,DAQmx_Val_Rising,10123,1)); // a digital edge produces each sample
+    DAQmxErrChk (DAQmxConfigureLogging(taskHandle2,"C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\Log_1.tdms",DAQmx_Val_LogAndRead,"Voltage",DAQmx_Val_OpenOrCreate));
+
+
+    // time counter
+    LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds;
+    LARGE_INTEGER Frequency;
+    QueryPerformanceFrequency(&Frequency);
+
+    QueryPerformanceCounter(&StartingTime);
+
+
+    for (int j=0; j < numofIterations; j++)
     {
-        cout << "iteration  " << i << endl;
-        SYSTEMTIME st;
-        GetSystemTime(&st);
-        printf("System Time: %02d:%02d:%02d:%02d\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+        //GetSystemTime(&st1);
+        cout << "Sweep  " << j << endl;
 
-        for (int numofAddresses=0; numofAddresses<2; numofAddresses++)
+        // loops through pressure ports addresses
+        for (uInt32 i=0; i<numofAddresses; i++)
         {
-            bitset<6> bits(numofAddresses);
-            //cout << bits << endl;
-
-            // allocated the binary address to an array of integers
-            for(int i=0; i<6; i++)
+            // writing to the digital ports
+            DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&i,&written,NULL));
+            //delay
+           /* for (i=0; i<500; i++)
             {
-                address[i] = bits[i];
-                //cout << address[i] << endl;
-            }
+                pow(2.12345 , 10.0);
+            }*/
 
-            // sends signal to the corresponding channels
-            for(long j=0; j<6; j++)
+            if (i==0 && j==0)
             {
-                DAQmxErrChk (DAQmxCreateTask("",&taskHandle)); // create task
-
-                if (address[j]==1)
-                {
-                    stringstream convert;
-                    convert << j;
-                    setAddressNum = convert.str(); // convert to string
-                    setAddressPort = "Dev1/port1/line"; // select address port
-                    finalAddress = setAddressPort + setAddressNum;
-                    cfinalAddress = finalAddress.c_str();
-                    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,cfinalAddress,"",DAQmx_Val_ChanForAllLines));
-                    DAQmxErrChk (DAQmxStartTask(taskHandle));
-                    DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,10.0,DAQmx_Val_GroupByChannel,&data,&written,NULL));
-                    DAQmxStopTask(taskHandle); //stops the task
-                    DAQmxClearTask(taskHandle); //clears the task
-                }
-
-                else if (address[j]==0)
-                {
-                    stringstream convert;
-                    convert << j;
-                    setAddressNum = convert.str();
-                    setAddressPort = "Dev1/port1/line";
-                    finalAddress = setAddressPort + setAddressNum;
-                    cfinalAddress = finalAddress.c_str();
-                    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,cfinalAddress,"",DAQmx_Val_ChanForAllLines));
-                    DAQmxErrChk (DAQmxStartTask(taskHandle));
-                    DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,2,1,10.0,DAQmx_Val_GroupByChannel,&data,&written,NULL));
-                    DAQmxStopTask(taskHandle); //stops the task
-                    DAQmxClearTask(taskHandle); //clears the task
-                }
-
+                (DAQmxStartTask(taskHandle2)); //starts the created task
             }
-
-            /*********************************************/
 
             // reading the data of V0
-            SYSTEMTIME st;
-            DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task
-            DAQmxErrChk (DAQmxCreateAIVoltageChan(taskHandle2,commands.getPhysChan(),"",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
-            DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",commands.getSamplingFreq(),DAQmx_Val_Rising,commands.getSamplingMode(),commands.getSamplePerChan())); // a digital edge produces each sample
-
-            DAQmxErrChk (DAQmxStartTask(taskHandle2)); //starts the created task
-
-            //printf("Logging samples continuously. Press Enter to interrupt\n");
-
-            static int  totalRead=0;
-            int32       read;//=0;
-            double      *dataread;
-            dataread = commands.getDataArray();
-
-            DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,commands.getSamplePerChan(),10.0,DAQmx_Val_GroupByScanNumber,dataread,commands.getSampleRate(),&read,NULL));
-            //printf("Acquiring samples: Samples Read %d\r",(int)(totalRead+=read));
-            //cout << endl;
-            //GetSystemTime(&st);
-            //printf("System Time: %02d:%02d:%02d:%02d\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-            DAQmxStopTask(taskHandle2); //stops the task
-            DAQmxClearTask(taskHandle2); //clears the task
-
-            GetSystemTime(&st); // time stamp
-            printf("System Time: %02d:%02d:%02d:%02d\n", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-            string strTime;
-            char buffer [256];
-            sprintf(buffer, "%02d:%02d:%02d:%03d", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-            strTime = buffer;
-
-            int columnNum = 0;
-
-            cout << "checking   " << read*commands.getNumofChan() << endl;
-            if (numofAddresses==0)
-            {
-                for (int j=0; j < (read*commands.getNumofChan()); ++j)
-                {
-                    MyExcelFile << j << "," << dataread[j] << endl;
-                    columnNum = columnNum+commands.getNumofChan();
-                }
-            }
-
-            else
-            {
-                for (int j=0; j < (read*commands.getNumofChan()); ++j)
-                {
-                    MyExcelFile << "," << "," << dataread[j] << endl;
-                }
-            }
-
-
-
-
-
-           /* int arraySize = read*commands.getNumofChan()*commands.getIteration(); // specify array size for excel
-            int col2 = 0;
-            int col3 = 1;
-            int col4 = 2;
-
-
-
-                if(col2==j)
-                {
-                    MyExcelFile << i << "," << distance[j];
-                    col2 = col2+commands.getNumofChan();
-                }
-
-                if(col3==j)
-                {
-                    MyExcelFile << "," << data[j];
-                    col3 = col3+commands.getNumofChan();
-                }
-
-                if(col4==j)
-                {
-                    MyExcelFile << "," << data[j] << "," << strTime << endl;
-                    col4 = col4+commands.getNumofChan();
-                }*/
+            DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,1,-1,DAQmx_Val_GroupByScanNumber,dataread,10,&readArraySize,NULL));
 
 
         }
 
+        /*QueryPerformanceCounter(&EndingTime);
+        ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
+        ElapsedMicroseconds.QuadPart *= 1000000;
+        ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
+        looptime[j] = ElapsedMicroseconds.QuadPart;
+
+
+        GetSystemTime(&st2); // time stamp
+        char buffer [256];
+        sprintf(buffer, "%03d.%05d,%03d.%05d", st1.wHour, st1.wMinute, st1.wSecond, st1.wMilliseconds, st2.wHour, st2.wMinute, st2.wSecond, st2.wMilliseconds);
+        strTime = buffer;
+        timeStamp << strTime << endl;*/
+
     }
+
+    /*for (int i=0; i < numofIterations; i = i+1)
+    {
+        timeCounter << looptime[i] << endl;
+    }
+
+    /// Organise DATA ///
+
+    for (int j=0; j<numofIterations; j++)
+    {
+       for (uInt32 i=0; i<numofAddresses; i++)
+        {
+            MyExcelFile << dataArray[i][j] << ",";
+        }
+        MyExcelFile << strTime << endl;
+    }*/
+
+
+    DAQmxStopTask(taskHandle); //stops the task
+    DAQmxClearTask(taskHandle); //clears the task
+    DAQmxStopTask(taskHandle2); //stops the task
+    DAQmxClearTask(taskHandle2); //clears the task
 
 
 

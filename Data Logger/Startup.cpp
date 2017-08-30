@@ -3307,32 +3307,32 @@ void Startup::ESP()
     //record data
     ofstream MyExcelFile;
     MyExcelFile.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\ESPdata.csv");
-    ofstream timeCounter;
-    timeCounter.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\timeCounter.csv");
-    ofstream timeStamp;
-    timeStamp.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\timeStamp.csv");
+    MyExcelFile << "Timestamp,Counter,";
 
-    SYSTEMTIME st1,st2;
+    SYSTEMTIME headersystemTime,endsystemTime;
 
     // constant variables
-    int numofAddresses = 64;
-    int numofIterations = 200;
-    double dataArray[250][63];
-    double udataArray[8];
+    int numofAddresses = 31;
+    int numofUnsteadyChan = 8;
+    int numofIterations = 50;
     int32        readArraySize;
     int32        *data;
     float64      dataread[64000];
-    LONGLONG looptime[100];
-    string strTime;
+    vector<LONGLONG> timeArray;
+    vector<string> clockTime;
+    vec scannerRecord(numofAddresses);
+    mat unsteadyRecord(numofAddresses,numofUnsteadyChan);
+    mat outputMatrix(numofAddresses*numofIterations,numofAddresses+numofUnsteadyChan);
+
 
     (DAQmxCreateTask("",&taskHandle)); // create task
-    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,"Dev1/port1/line0:5","",DAQmx_Val_ChanForAllLines));
+    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,"Dev1_2/port1/line0:5","",DAQmx_Val_ChanForAllLines));
     DAQmxErrChk (DAQmxStartTask(taskHandle));
 
     DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
-    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1/ai0:9","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
-    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",12800,DAQmx_Val_Rising,10123,1)); // a digital edge produces each sample
-    DAQmxErrChk (DAQmxConfigureLogging(taskHandle2,"C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\Log_1.tdms",DAQmx_Val_LogAndRead,"Voltage",DAQmx_Val_OpenOrCreate));
+    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:8","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
+    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",6200,DAQmx_Val_Rising,DAQmx_Val_ContSamps,1)); // a digital edge produces each sample
+//    DAQmxErrChk (DAQmxConfigureLogging(taskHandle2,"C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\Log_1.tdms",DAQmx_Val_LogAndRead,"Voltage",DAQmx_Val_OpenOrCreate));
 
 
     // time counter
@@ -3342,70 +3342,105 @@ void Startup::ESP()
 
     QueryPerformanceCounter(&StartingTime);
 
-
     for (int j=0; j < numofIterations; j++)
     {
-        //GetSystemTime(&st1);
+
         cout << "Sweep  " << j << endl;
 
         // loops through pressure ports addresses
         for (uInt32 i=0; i<numofAddresses; i++)
         {
+
+            (DAQmxStartTask(taskHandle2)); //starts the created task
+
             // writing to the digital ports
             DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&i,&written,NULL));
-            //delay
-           /* for (i=0; i<500; i++)
-            {
-                pow(2.12345 , 10.0);
-            }*/
-
-            if (i==0 && j==0)
-            {
-                (DAQmxStartTask(taskHandle2)); //starts the created task
-            }
 
             // reading the data of V0
             DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,1,-1,DAQmx_Val_GroupByScanNumber,dataread,10,&readArraySize,NULL));
 
+            // time recording
+            QueryPerformanceCounter(&EndingTime);
+            ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
+            ElapsedMicroseconds.QuadPart *= 1000000;
+            ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
+            timeArray.push_back(ElapsedMicroseconds.QuadPart);
+            GetSystemTime(&endsystemTime);
+            char buffer [256];
+            sprintf(buffer, "%02d:%02d:%03d:%05d", endsystemTime.wHour, endsystemTime.wMinute, endsystemTime.wSecond, endsystemTime.wMilliseconds);
+            clockTime.push_back(buffer);
+
+            //record scanner data matrix
+            scannerRecord(i) = dataread[0];
+
+            for (int k=0; k<numofUnsteadyChan; k++)
+            {
+                unsteadyRecord(i,k) = dataread[k+1];
+            }
 
         }
 
-        /*QueryPerformanceCounter(&EndingTime);
-        ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
-        ElapsedMicroseconds.QuadPart *= 1000000;
-        ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
-        looptime[j] = ElapsedMicroseconds.QuadPart;
-
-
-        GetSystemTime(&st2); // time stamp
-        char buffer [256];
-        sprintf(buffer, "%03d.%05d,%03d.%05d", st1.wHour, st1.wMinute, st1.wSecond, st1.wMilliseconds, st2.wHour, st2.wMinute, st2.wSecond, st2.wMilliseconds);
-        strTime = buffer;
-        timeStamp << strTime << endl;*/
-
-    }
-
-    /*for (int i=0; i < numofIterations; i = i+1)
-    {
-        timeCounter << looptime[i] << endl;
-    }
-
-    /// Organise DATA ///
-
-    for (int j=0; j<numofIterations; j++)
-    {
-       for (uInt32 i=0; i<numofAddresses; i++)
+        for(int r=0; r<numofAddresses; r++)
         {
-            MyExcelFile << dataArray[i][j] << ",";
-        }
-        MyExcelFile << strTime << endl;
-    }*/
+            for (int c=0; c<numofAddresses+numofUnsteadyChan; c++)
+            {
+                if (c>=numofAddresses)
+                {
+                    outputMatrix(r+(j*numofAddresses),c) = unsteadyRecord(r,c-numofAddresses);
+                }
 
+                else
+                {
+                    outputMatrix(r+(j*numofAddresses),c) = scannerRecord(c);
+                }
+            }
+        }
+
+        DAQmxStopTask(taskHandle2); //stops the task
+
+    }
 
     DAQmxStopTask(taskHandle); //stops the task
     DAQmxClearTask(taskHandle); //clears the task
     DAQmxStopTask(taskHandle2); //stops the task
     DAQmxClearTask(taskHandle2); //clears the task
+
+    for(int i=0;i<numofAddresses; i++)
+    {
+        MyExcelFile << "P" << i+1 << ",";
+    }
+
+    for(int i=0;i<numofUnsteadyChan; i++)
+    {
+        MyExcelFile << "UP" << i+1;
+        if (i<numofUnsteadyChan-1)
+        {
+            MyExcelFile << ",";
+        }
+        else
+        {
+            MyExcelFile << endl;
+        }
+    }
+
+    for(int i=0; i<outputMatrix.n_rows; i++)
+    {
+        MyExcelFile << clockTime[i] << "," << timeArray[i] << ",";
+        for (int j=0; j<outputMatrix.n_cols; j++)
+        {
+            MyExcelFile << outputMatrix(i,j);
+            if (j<outputMatrix.n_cols-1)
+            {
+                MyExcelFile << ",";
+            }
+            else
+            {
+                MyExcelFile << endl;
+            }
+
+        }
+
+    }
 
 
 

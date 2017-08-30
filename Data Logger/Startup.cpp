@@ -6,15 +6,18 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
-#include <fstream>8
+#include <fstream>
 #include <string>
 #include <serialClass.h>
 #include <windows.h>
 #include <iomanip>
 #include <bitset>
 #include <math.h>
+#include <vector>
+#include <armadillo>
 
 using namespace std;
+using namespace arma;
 #define DAQmxErrChk(functionCall) if( DAQmxFailed(error=(functionCall)) ) goto Error; else
 
 void Startup::config()
@@ -3305,24 +3308,48 @@ void Startup::ESP()
     int32		written;
 
     //record data
-    ofstream MyExcelFile;
-    MyExcelFile.open("C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\ESPdata.csv");
+    ofstream MyExcelFile("ESPdata.csv");
     MyExcelFile << "Timestamp,Counter,";
 
     SYSTEMTIME headersystemTime,endsystemTime;
 
     // constant variables
     int numofAddresses = 31;
-    int numofUnsteadyChan = 8;
-    int numofIterations = 50;
+    int numofUnsteadyChan = 6;
+    int numofIterations = 1;
     int32        readArraySize;
     int32        *data;
-    float64      dataread[64000];
+    float64      dataread[numofUnsteadyChan*2];
     vector<LONGLONG> timeArray;
     vector<string> clockTime;
+
     vec scannerRecord(numofAddresses);
     mat unsteadyRecord(numofAddresses,numofUnsteadyChan);
     mat outputMatrix(numofAddresses*numofIterations,numofAddresses+numofUnsteadyChan);
+
+
+
+//    (DAQmxCreateTask("",&taskHandle)); // create task
+//    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,"Dev1_2/port1/line0:5","",DAQmx_Val_ChanForAllLines));
+//    DAQmxErrChk (DAQmxStartTask(taskHandle));
+//
+//    DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
+//    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:5","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
+//    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",40000,DAQmx_Val_Rising,DAQmx_Val_FiniteSamps,2)); // a digital edge produces each sample
+//
+//    for (uInt32 j=0; j < numofAddresses; j++)
+//    {
+//        DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&j,&written,NULL));
+//        DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,2,-1,DAQmx_Val_GroupByScanNumber,dataread,numofUnsteadyChan*2,&readArraySize,NULL));
+//
+//        for (int i=0; i<numofUnsteadyChan; ++i)
+//        {
+//            if (dataread[i] > 2) {cout << "1,";}
+//            else  {cout << "0,";}
+//        }
+//        cout << endl;
+//    }
+
 
 
     (DAQmxCreateTask("",&taskHandle)); // create task
@@ -3330,16 +3357,13 @@ void Startup::ESP()
     DAQmxErrChk (DAQmxStartTask(taskHandle));
 
     DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
-    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:8","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
-    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",6200,DAQmx_Val_Rising,DAQmx_Val_ContSamps,1)); // a digital edge produces each sample
-//    DAQmxErrChk (DAQmxConfigureLogging(taskHandle2,"C:\\Users\\Hesham\\Documents\\Engineering\\Northumbria University\\PhD Research\\Data Aquisition\\Log_1.tdms",DAQmx_Val_LogAndRead,"Voltage",DAQmx_Val_OpenOrCreate));
-
+    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:5","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL));
+    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",40000,DAQmx_Val_Rising,DAQmx_Val_FiniteSamps,2));
 
     // time counter
     LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds;
     LARGE_INTEGER Frequency;
     QueryPerformanceFrequency(&Frequency);
-
     QueryPerformanceCounter(&StartingTime);
 
     for (int j=0; j < numofIterations; j++)
@@ -3351,13 +3375,10 @@ void Startup::ESP()
         for (uInt32 i=0; i<numofAddresses; i++)
         {
 
-            (DAQmxStartTask(taskHandle2)); //starts the created task
-
             // writing to the digital ports
             DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&i,&written,NULL));
-
             // reading the data of V0
-            DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,1,-1,DAQmx_Val_GroupByScanNumber,dataread,10,&readArraySize,NULL));
+            DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,2,-1,DAQmx_Val_GroupByScanNumber,dataread,2*numofUnsteadyChan,&readArraySize,NULL));
 
             // time recording
             QueryPerformanceCounter(&EndingTime);
@@ -3372,12 +3393,10 @@ void Startup::ESP()
 
             //record scanner data matrix
             scannerRecord(i) = dataread[0];
-
             for (int k=0; k<numofUnsteadyChan; k++)
             {
                 unsteadyRecord(i,k) = dataread[k+1];
             }
-
         }
 
         for(int r=0; r<numofAddresses; r++)
@@ -3395,9 +3414,6 @@ void Startup::ESP()
                 }
             }
         }
-
-        DAQmxStopTask(taskHandle2); //stops the task
-
     }
 
     DAQmxStopTask(taskHandle); //stops the task

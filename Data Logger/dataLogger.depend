@@ -287,3 +287,103 @@
 	<bitset>
 	<math.h>
 
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\interface.cpp
+	<stdio.h>
+	<stdlib.h>
+	<iostream>
+	<Interface.h>
+	<sstream>
+	<Startup.h>
+	<typeinfo>
+	<fstream>
+	<iomanip>
+
+1504092834 c:\users\feestaff\documents\github\wt-data-logger\data logger\include\interface.h
+	<iostream>
+	<stdint.h>
+	<Startup.h>
+
+1504092834 c:\users\feestaff\documents\github\wt-data-logger\data logger\include\startup.h
+	<Interface.h>
+	<stdio.h>
+	<stdlib.h>
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\main.cpp
+	<ctime>
+	<windows.h>
+	<stdio.h>
+	<NIDAQmx.h>
+	<stdlib.h>
+	<iostream>
+	<Interface.h>
+	<Startup.h>
+	<fstream>
+	<string>
+	<serialClass.h>
+	<time.h>
+	<unistd.h>
+	<sstream>
+	<iomanip>
+
+1504092834 c:\users\feestaff\documents\github\wt-data-logger\data logger\include\serialclass.h
+	<windows.h>
+	<stdio.h>
+	<stdlib.h>
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\multidev.cpp
+	<stdio.h>
+	<NIDAQmx.h>
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\readconfig.cpp
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\src\distance.cpp
+	"Distance.h"
+
+1504092834 c:\users\feestaff\documents\github\wt-data-logger\data logger\include\distance.h
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\src\readconfig.cpp
+	"readConfig.h"
+	<stdio.h>
+	<stdlib.h>
+	<iostream>
+	<Interface.h>
+	<sstream>
+	<Startup.h>
+	<typeinfo>
+	<fstream>
+	<string>
+
+1504092834 c:\users\feestaff\documents\github\wt-data-logger\data logger\include\readconfig.h
+	<iostream>
+	<stdint.h>
+	<Startup.h>
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\src\samplerate.cpp
+	<stdlib.h>
+	<iostream>
+	<Interface.h>
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\src\serialclass.cpp
+	"serialClass.h"
+
+1504092834 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\src\startup.cpp
+
+1504100574 source:c:\users\feestaff\documents\github\wt-data-logger\data logger\startup.cpp
+	<Interface.h>
+	<readConfig.h>
+	<NIDAQmx.h>
+	<ctime>
+	<stdio.h>
+	<stdlib.h>
+	<iostream>
+	<sstream>
+	<fstream>
+	<string>
+	<serialClass.h>
+	<windows.h>
+	<iomanip>
+	<bitset>
+	<math.h>
+	<vector>
+	<armadillo>
+

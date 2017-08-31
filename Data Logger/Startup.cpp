@@ -3314,18 +3314,50 @@ void Startup::ESP()
     SYSTEMTIME headersystemTime,endsystemTime;
 
     // constant variables
-    int numofAddresses = 31;
+    int numofAddresses = 4;
     int numofUnsteadyChan = 6;
     int numofIterations = 1;
     int32        readArraySize;
     int32        *data;
-    float64      dataread[numofUnsteadyChan*2];
+    int samples = 400;
+    float64      dataread[samples*numofAddresses];
     vector<LONGLONG> timeArray;
     vector<string> clockTime;
+    int inc = 0;
+
 
     vec scannerRecord(numofAddresses);
     mat unsteadyRecord(numofAddresses,numofUnsteadyChan);
     mat outputMatrix(numofAddresses*numofIterations,numofAddresses+numofUnsteadyChan);
+
+    (DAQmxCreateTask("",&taskHandle)); // create task
+    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,"Dev1/port1/line0:3","",DAQmx_Val_ChanForAllLines));
+    DAQmxErrChk (DAQmxStartTask(taskHandle));
+
+    DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
+    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1/ai1:4","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
+    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",5000,DAQmx_Val_Rising,DAQmx_Val_ContSamps,samples)); // a digital edge produces each sample
+
+    DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,samples,-1,DAQmx_Val_GroupByScanNumber,dataread,samples*numofAddresses,&readArraySize,NULL));
+
+
+
+    for (uInt32 j=0; j < numofAddresses; j++)
+    {
+        DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&j,&written,NULL));
+    }
+    DAQmxStopTask(taskHandle2);
+
+    for (int i=0; i<readArraySize; ++i)
+    {
+        for (int j=0; j<numofAddresses; ++j)
+        {
+            if (dataread[inc] > 2) {cout << "1";}
+            else  {cout << "0";}
+            inc++;
+        }
+        cout << endl;
+    }
 
 
 
@@ -3334,129 +3366,106 @@ void Startup::ESP()
 //    DAQmxErrChk (DAQmxStartTask(taskHandle));
 //
 //    DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
-//    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:5","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL)); // create channel(s) to measure RMS voltage
-//    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",40000,DAQmx_Val_Rising,DAQmx_Val_FiniteSamps,2)); // a digital edge produces each sample
+//    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:5","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL));
+//    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",40000,DAQmx_Val_Rising,DAQmx_Val_FiniteSamps,2));
 //
-//    for (uInt32 j=0; j < numofAddresses; j++)
+//    // time counter
+//    LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds;
+//    LARGE_INTEGER Frequency;
+//    QueryPerformanceFrequency(&Frequency);
+//    QueryPerformanceCounter(&StartingTime);
+//
+//    for (int j=0; j < numofIterations; j++)
 //    {
-//        DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&j,&written,NULL));
-//        DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,2,-1,DAQmx_Val_GroupByScanNumber,dataread,numofUnsteadyChan*2,&readArraySize,NULL));
 //
-//        for (int i=0; i<numofUnsteadyChan; ++i)
+//        cout << "Sweep  " << j << endl;
+//
+//        // loops through pressure ports addresses
+//        for (uInt32 i=0; i<numofAddresses; i++)
 //        {
-//            if (dataread[i] > 2) {cout << "1,";}
-//            else  {cout << "0,";}
+//
+//            // writing to the digital ports
+//            DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&i,&written,NULL));
+//            // reading the data of V0
+//            DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,2,-1,DAQmx_Val_GroupByScanNumber,dataread,2*numofUnsteadyChan,&readArraySize,NULL));
+//
+//            // time recording
+//            QueryPerformanceCounter(&EndingTime);
+//            ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
+//            ElapsedMicroseconds.QuadPart *= 1000000;
+//            ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
+//            timeArray.push_back(ElapsedMicroseconds.QuadPart);
+//            GetSystemTime(&endsystemTime);
+//            char buffer [256];
+//            sprintf(buffer, "%02d:%02d:%03d:%05d", endsystemTime.wHour, endsystemTime.wMinute, endsystemTime.wSecond, endsystemTime.wMilliseconds);
+//            clockTime.push_back(buffer);
+//
+//            //record scanner data matrix
+//            scannerRecord(i) = dataread[0];
+//            for (int k=0; k<numofUnsteadyChan; k++)
+//            {
+//                unsteadyRecord(i,k) = dataread[k+1];
+//            }
 //        }
-//        cout << endl;
+//
+//        for(int r=0; r<numofAddresses; r++)
+//        {
+//            for (int c=0; c<numofAddresses+numofUnsteadyChan; c++)
+//            {
+//                if (c>=numofAddresses)
+//                {
+//                    outputMatrix(r+(j*numofAddresses),c) = unsteadyRecord(r,c-numofAddresses);
+//                }
+//
+//                else
+//                {
+//                    outputMatrix(r+(j*numofAddresses),c) = scannerRecord(c);
+//                }
+//            }
+//        }
 //    }
-
-
-
-    (DAQmxCreateTask("",&taskHandle)); // create task
-    DAQmxErrChk (DAQmxCreateDOChan(taskHandle,"Dev1_2/port1/line0:5","",DAQmx_Val_ChanForAllLines));
-    DAQmxErrChk (DAQmxStartTask(taskHandle));
-
-    DAQmxErrChk (DAQmxCreateTask("",&taskHandle2)); //creates a task 2
-    DAQmxErrChk(DAQmxCreateAIVoltageChan(taskHandle2,"Dev1_2/ai0:5","",DAQmx_Val_RSE,-10.0,10.0,DAQmx_Val_Volts,NULL));
-    DAQmxErrChk (DAQmxCfgSampClkTiming(taskHandle2,"",40000,DAQmx_Val_Rising,DAQmx_Val_FiniteSamps,2));
-
-    // time counter
-    LARGE_INTEGER StartingTime, EndingTime, ElapsedMicroseconds;
-    LARGE_INTEGER Frequency;
-    QueryPerformanceFrequency(&Frequency);
-    QueryPerformanceCounter(&StartingTime);
-
-    for (int j=0; j < numofIterations; j++)
-    {
-
-        cout << "Sweep  " << j << endl;
-
-        // loops through pressure ports addresses
-        for (uInt32 i=0; i<numofAddresses; i++)
-        {
-
-            // writing to the digital ports
-            DAQmxErrChk (DAQmxWriteDigitalU32(taskHandle,1,1,0,DAQmx_Val_GroupByChannel,&i,&written,NULL));
-            // reading the data of V0
-            DAQmxErrChk (DAQmxReadAnalogF64(taskHandle2,2,-1,DAQmx_Val_GroupByScanNumber,dataread,2*numofUnsteadyChan,&readArraySize,NULL));
-
-            // time recording
-            QueryPerformanceCounter(&EndingTime);
-            ElapsedMicroseconds.QuadPart = EndingTime.QuadPart - StartingTime.QuadPart;
-            ElapsedMicroseconds.QuadPart *= 1000000;
-            ElapsedMicroseconds.QuadPart /= Frequency.QuadPart;
-            timeArray.push_back(ElapsedMicroseconds.QuadPart);
-            GetSystemTime(&endsystemTime);
-            char buffer [256];
-            sprintf(buffer, "%02d:%02d:%03d:%05d", endsystemTime.wHour, endsystemTime.wMinute, endsystemTime.wSecond, endsystemTime.wMilliseconds);
-            clockTime.push_back(buffer);
-
-            //record scanner data matrix
-            scannerRecord(i) = dataread[0];
-            for (int k=0; k<numofUnsteadyChan; k++)
-            {
-                unsteadyRecord(i,k) = dataread[k+1];
-            }
-        }
-
-        for(int r=0; r<numofAddresses; r++)
-        {
-            for (int c=0; c<numofAddresses+numofUnsteadyChan; c++)
-            {
-                if (c>=numofAddresses)
-                {
-                    outputMatrix(r+(j*numofAddresses),c) = unsteadyRecord(r,c-numofAddresses);
-                }
-
-                else
-                {
-                    outputMatrix(r+(j*numofAddresses),c) = scannerRecord(c);
-                }
-            }
-        }
-    }
-
-    DAQmxStopTask(taskHandle); //stops the task
-    DAQmxClearTask(taskHandle); //clears the task
-    DAQmxStopTask(taskHandle2); //stops the task
-    DAQmxClearTask(taskHandle2); //clears the task
-
-    for(int i=0;i<numofAddresses; i++)
-    {
-        MyExcelFile << "P" << i+1 << ",";
-    }
-
-    for(int i=0;i<numofUnsteadyChan; i++)
-    {
-        MyExcelFile << "UP" << i+1;
-        if (i<numofUnsteadyChan-1)
-        {
-            MyExcelFile << ",";
-        }
-        else
-        {
-            MyExcelFile << endl;
-        }
-    }
-
-    for(int i=0; i<outputMatrix.n_rows; i++)
-    {
-        MyExcelFile << clockTime[i] << "," << timeArray[i] << ",";
-        for (int j=0; j<outputMatrix.n_cols; j++)
-        {
-            MyExcelFile << outputMatrix(i,j);
-            if (j<outputMatrix.n_cols-1)
-            {
-                MyExcelFile << ",";
-            }
-            else
-            {
-                MyExcelFile << endl;
-            }
-
-        }
-
-    }
+//
+//    DAQmxStopTask(taskHandle); //stops the task
+//    DAQmxClearTask(taskHandle); //clears the task
+//    DAQmxStopTask(taskHandle2); //stops the task
+//    DAQmxClearTask(taskHandle2); //clears the task
+//
+//    for(int i=0;i<numofAddresses; i++)
+//    {
+//        MyExcelFile << "P" << i+1 << ",";
+//    }
+//
+//    for(int i=0;i<numofUnsteadyChan; i++)
+//    {
+//        MyExcelFile << "UP" << i+1;
+//        if (i<numofUnsteadyChan-1)
+//        {
+//            MyExcelFile << ",";
+//        }
+//        else
+//        {
+//            MyExcelFile << endl;
+//        }
+//    }
+//
+//    for(int i=0; i<outputMatrix.n_rows; i++)
+//    {
+//        MyExcelFile << clockTime[i] << "," << timeArray[i] << ",";
+//        for (int j=0; j<outputMatrix.n_cols; j++)
+//        {
+//            MyExcelFile << outputMatrix(i,j);
+//            if (j<outputMatrix.n_cols-1)
+//            {
+//                MyExcelFile << ",";
+//            }
+//            else
+//            {
+//                MyExcelFile << endl;
+//            }
+//
+//        }
+//
+//    }
 
 
 
